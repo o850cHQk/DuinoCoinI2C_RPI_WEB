@@ -503,6 +503,7 @@ def load_config():
     global shuffle_ports
     global SOC_TIMEOUT
     global i2c
+    global webapi
 
     if not Path(str(Settings.DATA_DIR) + '/Settings.cfg').is_file():
         print(
@@ -631,6 +632,9 @@ def load_config():
         avrport = avrport.split(',')
         print(Style.RESET_ALL + get_string('config_saved'))
         hashrate_list = [0] * len(avrport)
+        # WEBAPI
+        webapi['identifier'] = rig_identifier
+        webapi['username'] = username
 
     else:
         config.read(str(Settings.DATA_DIR) + '/Settings.cfg')
@@ -651,6 +655,10 @@ def load_config():
         i2c = int(config["AVR Miner"]["i2c"])
         Settings.I2C_WR_RDDCY = int(config["AVR Miner"]["i2c_wr_rddcy"])
         Settings.WORKER_CFG_SHARED = config["AVR Miner"]["worker_cfg_shared"].lower()
+        # WEBAPI
+        webapi['identifier'] = rig_identifier
+        webapi['username'] = username
+
 
 
 def greeting():
