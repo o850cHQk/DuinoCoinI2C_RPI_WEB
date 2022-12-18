@@ -1547,6 +1547,12 @@ if __name__ == '__main__':
         except Exception as e:
             debug_output(f'Error launching donation thread: {e}')
 
+    with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+        pretty_print('webserv',
+                        f"Serving Web at {PORT}",
+                        "success")
+        httpd.serve_forever()
+
     try:
         i2c_bus = SMBus(i2c)
         fastest_pool = Client.fetch_pool()
