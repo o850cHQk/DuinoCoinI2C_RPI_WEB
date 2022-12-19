@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>RPI I2C Unofficial AVR Miner</title>
+    <meta name="description" content="RPI I2C Unofficial AVR Miner 3.3">
+    <meta name="author" content="Vargink">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Web App
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script>
+        if('serviceWorker' in navigator){
+          navigator.serviceWorker.register('/service-worker.js');
+        } else {
+          console.log("Service worker is not supported");
+        }
+    </script>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/duco192.png"/>
+    <meta name="theme-color" content="#ff4112">
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="css/fontawesome-all.min.css" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+
+    <!-- Javascript
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script language="JavaScript" type="text/javascript" src="js/chart.js"></script>
+    <script language="JavaScript" type="text/javascript" src="js/jquery-3.6.1.min.js"></script>
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+</head>
+<body>
+
+    <!-- Messages Element
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="section ui-msg" style="display: none;">
+        <div class="container">
+            <div class="row">
+                <div class="eleven columns ui-text">
+                    Ui Message
+                </div>
+                <div class="one column">
+                    <div class="ui-button" id="uiHide">
+                        <i class="fa-solid fa-xmark"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container menu-bar" style="margin-top: 10px">
+        <div class="row">
+            <div class="one column ui-button" id="menuToggle">
+                <i class="fa-solid fa-bars" style="font-size: 1.5em;"></i>
+            </div>
+            <div class="eleven columns">
+                RPI I2C Unofficial AVR Miner 3.3
+            </div>
+        </div>
+    </div>
+    <div class="container menu" style="display: none;">
+        <div class="row"><label>Miners</label></div>
+        <div class="row">
+            <button class="ui-button" id="minerSimple">Simple</button>
+            <button class="ui-button" id="minerDetailed">Detailed</button>
+        </div>
+    </div>
+    <!-- Main Dashboard
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container dashboard">
+        <div class="row">
+            <div class="three columns" style="text-align: center;"><b>Miner</b>&#10;<div class="identifier"></div></div>
+            <div class="three columns" style="text-align: center;"><b>User</b>&#10;<div class="username"></div></div>
+            <div class="three columns" style="text-align: center;"><b>Node</b>&#10;<div class="node"></div></div>
+        </div>
+        <div class="row">
+            <div class="twelve columns">
+                <h5>Report</h5>
+            </div>
+        </div>
+        <div class="row">
+            <div class="two columns" style="text-align: center;"><b>Shares /s</b>&#10;<div class="shares"></div></div>
+            <div class="two columns" style="text-align: center;"><b>Discoverd Blocks</b>&#10;<div class="block"></div></div>
+            <div class="two columns" style="text-align: center;"><b>Total Hashrate</b>&#10;<div class="hashrate"></div></div>
+            <div class="two columns" style="text-align: center;"><b>Uptime</b>&#10;<div class="uptime"></div></div>
+            <div class="two columns" style="text-align: center;"><b>Bad Checksums</b>&#10;<div class="bad_crc8"></div></div>
+            <div class="two columns" style="text-align: center;"><b>i2C Retries</b>&#10;<div class="i2c_retry_count"></div></div>
+        </div>
+        <div class="row">
+            <div class="twelve columns">
+                <h5>Shares</h5>
+            </div>
+        </div>
+        <div class="row">
+            <div class="three columns" style="text-align: center;"><b>Accepted Shares</b>&#10;<div class="accepted"></div></div>
+            <div class="three columns" style="text-align: center;"><b>Rejected Shares</b>&#10;<div class="rejected"></div></div>
+        </div>
+        <div class="row">
+            <div class="twelve columns">
+                <h5>Miners</h5>
+            </div>
+        </div>
+        <div class="row simpleMiners" style="display: none;">
+        </div>
+        <div class="row detailedMiners" style="display: none;">
+            <table class="u-full-width">
+                <thead>
+                    <tr>
+                    <th>Worker</th>
+                    <th>CTime</th>
+                    <th>Hashrate</th>
+                    <th>Difficulty</th>
+                    <th>Ping</th>
+                    <th>Temp</th>
+                    </tr>
+                </thead>
+                <tbody class="dMiners">
+                </tbody>
+            </table>
+        </div>
+        <table class="u-full-width">
+            <thead>
+              <tr>
+                <th>Error Logs</th>
+              </tr>
+            </thead>
+            <tbody class="logs">
+            </tbody>
+          </table>
+    </div>
+    <!-- Javascript 
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script>
+        minerView = 'simple'
+        function setCookie(name, value) {
+            let date = new Date();
+            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + value + "; " + expires + "; path=/";
+        }
+        function delCookie(name) {
+            let date = new Date();
+            date.setTime(date.getTime());
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + -1 + "; " + expires + "; path=/";
+        }
+        function getCookie(cookieName) {
+            var name = cookieName + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i].trim();
+                if ((c.indexOf(name)) == 0) {
+                    return c.substr(name.length);
+                }
+            }
+            return null;
+        }
+        function message(message) {
+            // show messages up the top
+            $('.ui-text').text(message);
+            $('.ui-msg').show();
+        }
+        timer = null;
+        function updateDashboard() {
+            // okay pull the user data and leta make shit happen
+            $.get( "api", function( data ) {
+                // set the new update time
+                data = JSON.parse(data);
+                $('.identifier').html(data.identifier);
+                $('.username').html(data.username);
+                $('.node').html(data.node);
+                $('.shares').html(data.report.shares);
+                $('.hashrate').html(data.report.hashrate);
+                $('.block').html(data.report.block);
+                $('.uptime').html(data.report.uptime);
+                $('.bad_crc8').html(data.report.bad_crc8);
+                $('.i2c_retry_count').html(data.report.i2c_retry_count);
+                $('.accepted').html(data.accepted);
+                $('.rejected').html(data.rejected);
+                if (minerView == 'simple') {
+                    for (const key in data.miners) {
+                        if (!$('#s' + key).length) {
+                            $('.simpleMiners').append('<div class="" style="text-align: center; font-size: 2em; display: inline-flex; margin: 5px;" id="s' + key + '"></div>');
+                        }
+                        if (data.miners[key].type == 'accept') {
+                            html = '<i class="fa-solid fa-person-digging" style="color: #96be25; align-self: center;"></i> ' + key + '<br>'
+                        } else if (data.miners[key].type == 'block') {
+                            html = '<i class="fa-solid fa-person-digging" style="color: #bea925; align-self: center;"></i> ' + key + '<br>'
+                        } else {
+                            html = '<i class="fa-solid fa-person-digging" style="color: #Ce1619; align-self: center;"></i> ' + key + '<br>'
+                        }
+                        //html += 'Last Share: ' + data.miners[key].computetime + '<br>Hashrate: ' + data.miners[key].total_hashrate + '<br>Difficulty: ' + data.miners[key].diff + '<br>Ping: ' + data.miners[key].ping + '<br>Temp: ' + data.miners[key].iot_data
+                        $('#s' + key).html(html)
+                    }
+                } else {
+                    for (const key in data.miners) {
+                        if (!$('#d' + key).length) {
+                            $('.dMiners').append('<tr id="d' + key + '"></tr>');
+                        }
+                        if (data.miners[key].type == 'accept') {
+                            html = '<td><i class="fa-solid fa-person-digging" style="color: #96be25;"></i> ' + key + '</td>'
+                        } else if (data.miners[key].type == 'block') {
+                            html = '<td><i class="fa-solid fa-person-digging" style="color: #bea925;"></i> ' + key + '</td>'
+                        } else {
+                            html = '<td><i class="fa-solid fa-person-digging" style="color: #Ce1619;"></i> ' + key + '</td>'
+                        }
+                        html += '<td>' + data.miners[key].computetime + '</td><td>' + data.miners[key].total_hashrate + '</td><td>' + data.miners[key].diff + '</td><td>' + data.miners[key].ping + '</td><td>' + data.miners[key].iot_data + '</td>'
+                        $('#d' + key).html(html)
+                    }
+                }
+                
+                $('.logs').html('');
+                for (let i in data.logs) {
+                    $('.logs').append('<tr><td>' + data.logs[i] + '</td></tr>');
+                }
+            }).fail(function(data, textStatus, xhr) {
+
+            });
+        }
+        function menuToggle() {
+            if ($('.menu').css('display') == 'none') {
+                $('.menu').show();
+                $('.dashboard').hide();
+            } else {
+                $('.menu').hide();
+                $('.dashboard').show();
+            }
+        }
+        
+        $(document).on('click', '.ui-button', function() {
+            switch (this.id) {
+            case 'menuToggle':
+                menuToggle();
+                break;
+            case 'minerSimple':
+                setCookie('minerView', 'simple');
+                minerView = 'simple';
+                $('.detailedMiners').hide();
+                $('.simpleMiners').show();
+                menuToggle();
+                break;
+            case 'minerDetailed':
+                setCookie('minerView', 'detailed');
+                minerView = 'detailed';
+                $('.simpleMiners').hide();
+                $('.detailedMiners').show();
+                menuToggle();
+                break;
+            }
+        });
+        function init() {
+            // the grabber and then run the timer
+            minerView = getCookie('minerView');
+            if (minerView === null) {
+                setCookie('minerView', 'simple');
+                minerView = 'simple';
+            }
+            if (minerView == 'simple') {
+                $('.simpleMiners').show();
+            } else {
+                $('.detailedMiners').show();
+            }
+            updateDashboard();
+            timer = setInterval(updateDashboard, 1000);
+        }
+        $(document).ready(function() {
+            console.log('page loaded');
+            // load the timer offset cookie
+            init();
+        });
+    </script>
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>

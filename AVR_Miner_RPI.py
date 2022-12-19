@@ -2,11 +2,13 @@
 """
 RPI I2C Unofficial AVR Miner 3.3 © MIT licensed
 Modified by JK-Rolling
+Web Interface by Vargink
 20210919
 
 Full credit belong to
 https://duinocoin.com
 https://github.com/revoxhere/duino-coin
+https://github.com/JK-Rolling/DuinoCoinI2C_RPI
 Duino-Coin Team & Community 2019-2022
 """
 
@@ -108,6 +110,9 @@ def port_num(com):
     return "{:02x}".format(int(com,16))
 
 # Web handler class
+
+class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    pass
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -232,7 +237,7 @@ class Client:
                     pretty_print("net0", get_string("connecting_node")
                                  + response["name"],
                                  "info")
-                                 
+                    webapi['node'] = response["name"]
                     NODE_ADDRESS = response["ip"]
                     NODE_PORT = response["port"]
                     debug_output(f"Fetched pool: {response['name']}")
@@ -345,7 +350,19 @@ PORT = 8000
 DIRECTORY = "web"
 webapi = {}
 webapi['miners'] = {}
-
+webapi['report'] = {
+'shares': 0,
+'block': 0,
+'hashrate': 0,
+'uptime': 0,
+'bad_crc8': 0,
+'i2c_retry_count': 0
+}
+webapi['accepted'] = 0
+webapi['rejected'] = 0
+webapi['time'] = 0
+webapi['node'] = 0
+webapi['logs'] = []
 
 if not path.exists(Settings.DATA_DIR):
     mkdir(Settings.DATA_DIR)
@@ -415,6 +432,12 @@ try:
 except:
     lang = 'english'
 
+# WEB FUNCTIONS
+
+def add_log(message):
+    webapi['logs'].append(message)
+    # only keep 10 logs 
+    webapi['logs'] = webapi['logs'][-10:]
 
 def get_string(string_name: str):
     if string_name in lang_file[lang]:
@@ -484,6 +507,7 @@ def handler(signal_received, frame):
         'sys0', get_string('sigint_detected')
         + Style.NORMAL + Fore.RESET
         + get_string('goodbye'), 'warning')
+    webserver.server_close()
 
     _exit(0)
 
@@ -881,19 +905,20 @@ def share_print(id, type, accept, reject, total_hashrate,
     if iot_data:
         (temperature, humidity) = iot_data.split("@")
         iot_text = f"{temperature}° . "
-    
+
+    webapi['accepted'] = accept
+    webapi['rejected'] = reject
+    webapi['time'] = datetime.now().strftime("%H:%M:%S")
     webapi['miners'][id] = {
     'type': type,
-    'date' : datetime.now().strftime("%H:%M:%S"),
-    'accept': accept,
-    'reject': reject,
     'total_hashrate' : total_hashrate,
     'computetime': computetime,
     'diff': diff,
     'ping': ping,
-    'reject_cause': reject_cause,
     'iot_data' : iot_text
     } 
+    if (reject_cause != None):
+        add_log(datetime.now().strftime("%H:%M:%S") + ': [' + id + '] ' + reject_cause)
 
 def flush_i2c(i2c_bus,com,period=1):
     i2c_flush_start = time()
@@ -1486,14 +1511,12 @@ def periodic_report(start_time, end_time, shares,
                     block, hashrate, uptime, bad_crc8, i2c_retry_count):
     seconds = round(end_time - start_time)
     webapi['report'] = {
-    'start_time': start_time,
-    'end_time': end_time,
-    'shares': shares,
+    'shares': str(round(shares/seconds, 1)),
     'block': block,
-    'hashrate': hashrate,
+    'hashrate': str(int(hashrate)) + " H/s",
     'uptime': uptime,
-    'bad_crc8': bad_crc8,
-    'i2c_retry_count': i2c_retry_count
+    'bad_crc8': str(round(bad_crc8/seconds, 6)) + " E/s",
+    'i2c_retry_count': str(round(i2c_retry_count/seconds, 6)) + " R/s"
     }
 
 def calculate_uptime(start_time):
@@ -1547,11 +1570,11 @@ if __name__ == '__main__':
         except Exception as e:
             debug_output(f'Error launching donation thread: {e}')
 
-    with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-        pretty_print('webserv',
-                        f"Serving Web at {PORT}",
-                        "success")
-        httpd.serve_forever()
+    httpd = http.server.ThreadingHTTPServer(('0.0.0.0', PORT), MyHandler)
+    webserver = Thread(target=httpd.serve_forever)
+    webserver.daemon = True
+    webserver.start()
+    pretty_print('webserv',f"Serving Web at {PORT}","success")
 
     try:
         i2c_bus = SMBus(i2c)
