@@ -346,7 +346,7 @@ mining_start_time = time()
 worker_cfg_global = {"valid":False}
 
 # WEB UI Variables
-PORT = 8000
+PORT = 7999
 DIRECTORY = "web"
 webapi = {}
 webapi['miners'] = {}
@@ -1570,11 +1570,11 @@ if __name__ == '__main__':
         except Exception as e:
             debug_output(f'Error launching donation thread: {e}')
 
-    httpd = http.server.ThreadingHTTPServer(('0.0.0.0', PORT), MyHandler)
+    httpd = http.server.ThreadingHTTPServer(('0.0.0.0', PORT + i2c), MyHandler)
     webserver = Thread(target=httpd.serve_forever)
     webserver.daemon = True
     webserver.start()
-    pretty_print('webserv',f"Serving Web at {PORT}","success")
+    pretty_print('webserv',f"Serving Web at {PORT  + i2c}","success")
 
     try:
         i2c_bus = SMBus(i2c)
