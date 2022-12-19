@@ -1,9 +1,9 @@
 # DuinoCoinI2C_RPI_WEB
 [JK-Rolling's DuinoCoinI2C](https://github.com/JK-Rolling/DuinoCoinI2C_RPI) miner now with a webui basically the exact same as his repo except the AVR_Miner_RPI.py has been modified to put the worker information into a web front end.
 
-Once running you can access it via [https://127.0.0.1:8000](https://127.0.0.1:8000) using i2c 1. If you are running this in dual master mode 
+Once running you can access it via [https://127.0.0.1:8000](https://127.0.0.1:8000) using i2c 1, You can also access this remotely via public ip address. If you are running this in dual master mode this will also grab the second miners details and put it into the one interface.
 
-<img src="Resources/webui1.png" alt="webui" width="70%">
+<img src="Resources/webui1.png" alt="webui">
 
 ## Video Tutorial
 
