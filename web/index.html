@@ -121,6 +121,7 @@
                 <thead>
                     <tr>
                     <th>Worker</th>
+                    <th>Accept/Reject</th>
                     <th>CTime</th>
                     <th>Hashrate</th>
                     <th>Difficulty</th>
@@ -218,7 +219,7 @@
                         } else {
                             html = '<td><i class="fa-solid fa-person-digging" style="color: #Ce1619;"></i> ' + key + '</td>'
                         }
-                        html += '<td>' + data.miners[key].computetime + '</td><td>' + data.miners[key].total_hashrate + '</td><td>' + data.miners[key].diff + '</td><td>' + data.miners[key].ping + '</td><td>' + data.miners[key].iot_data + '</td>'
+                        html += '<td>' + data.miners[key].accepted + '/' + data.miners[key].rejected + '</td><td>' + data.miners[key].computetime + '</td><td>' + data.miners[key].total_hashrate + '</td><td>' + data.miners[key].diff + '</td><td>' + data.miners[key].ping + '</td><td>' + data.miners[key].iot_data + '</td>'
                         $('#d' + key).html(html)
                     }
                 }

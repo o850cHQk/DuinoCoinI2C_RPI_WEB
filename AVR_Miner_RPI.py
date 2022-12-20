@@ -507,7 +507,6 @@ def handler(signal_received, frame):
         'sys0', get_string('sigint_detected')
         + Style.NORMAL + Fore.RESET
         + get_string('goodbye'), 'warning')
-    webserver.server_close()
 
     _exit(0)
 
@@ -798,32 +797,33 @@ def update_rich_presence():
 def pretty_print(sender: str = "sys0",
                  msg: str = None,
                  state: str = "success"):
-    """
-    Produces nicely formatted CLI output for messages:
-    HH:MM:S |sender| msg
-    """
-    if sender.startswith("net"):
-        bg_color = Back.BLUE
-    elif sender.startswith("avr"):
-        bg_color = Back.MAGENTA
-    else:
-        bg_color = Back.GREEN
-
-    if state == "success":
-        fg_color = Fore.GREEN
-    elif state == "info":
-        fg_color = Fore.BLUE
-    elif state == "error":
-        fg_color = Fore.RED
-    else:
-        fg_color = Fore.YELLOW
-
-    with thread_lock():
-        printlock.acquire()
-        print(Fore.WHITE + datetime.now().strftime(Style.DIM + "%H:%M:%S ")
-              + bg_color + Style.BRIGHT + " " + sender + " "
-              + Back.RESET + " " + fg_color + msg.strip())
-        printlock.release()
+#    """
+#    Produces nicely formatted CLI output for messages:
+#    HH:MM:S |sender| msg
+#    """
+#    if sender.startswith("net"):
+#        bg_color = Back.BLUE
+#    elif sender.startswith("avr"):
+#        bg_color = Back.MAGENTA
+#    else:
+#        bg_color = Back.GREEN
+#
+#    if state == "success":
+#        fg_color = Fore.GREEN
+#    elif state == "info":
+#        fg_color = Fore.BLUE
+#    elif state == "error":
+#        fg_color = Fore.RED
+#    else:
+#        fg_color = Fore.YELLOW
+#
+#    with thread_lock():
+#        printlock.acquire()
+#        print(Fore.WHITE + datetime.now().strftime(Style.DIM + "%H:%M:%S ")
+#              + bg_color + Style.BRIGHT + " " + sender + " "
+#              + Back.RESET + " " + fg_color + msg.strip())
+#        printlock.release()
+    add_log(datetime.now().strftime("%H:%M:%S ") + " " + sender + " " + msg.strip())
 
 def worker_print(com, **kwargs):
 
@@ -909,16 +909,18 @@ def share_print(id, type, accept, reject, total_hashrate,
     webapi['accepted'] = accept
     webapi['rejected'] = reject
     webapi['time'] = datetime.now().strftime("%H:%M:%S")
-    webapi['miners'][id] = {
-    'type': type,
-    'total_hashrate' : total_hashrate,
-    'computetime': computetime,
-    'diff': diff,
-    'ping': ping,
-    'iot_data' : iot_text
-    } 
+    webapi['miners'][id]['type'] = type
+    webapi['miners'][id]['total_hashrate'] = total_hashrate
+    webapi['miners'][id]['computetime'] = computetime
+    webapi['miners'][id]['diff'] = diff
+    webapi['miners'][id]['ping'] = ping
+    webapi['miners'][id]['iot_data'] = iot_text
+    if (type == 'accept' or type == 'block'):
+        webapi['miners'][id]['accepted'] += 1
+    else:
+        webapi['miners'][id]['rejected'] += 1
     if (reject_cause != None):
-        add_log(datetime.now().strftime("%H:%M:%S") + ': [' + id + '] ' + reject_cause)
+        add_log(datetime.now().strftime("%H:%M:%S") + ': [' + id + '] ' + reject_cause)  
 
 def flush_i2c(i2c_bus,com,period=1):
     i2c_flush_start = time()
@@ -1149,10 +1151,20 @@ def mine_avr(com, threadid, fastest_pool):
         single_core_only = get_worker_core_status(i2c_bus, com)
         worker_name = get_worker_name(i2c_bus, com)
 
-    worker_print(com, i2c_clock=i2c_freq, crc8_en=crc8_en, 
-                sensor_en=sensor_en, baton_status=baton_status,
-                single_core_only=single_core_only, worker_name=worker_name, 
-                shared_worker_cfg=str(worker_cfg_shared))
+    #worker_print(com, i2c_clock=i2c_freq, crc8_en=crc8_en, 
+    #            sensor_en=sensor_en, baton_status=baton_status,
+    #            single_core_only=single_core_only, worker_name=worker_name, 
+    #            shared_worker_cfg=str(worker_cfg_shared))
+    webapi['miners'][port_num(com)] = {
+        'accepted' : 0,
+        'rejected' : 0,
+        'type': 0,
+        'total_hashrate' : 0,
+        'computetime': 0,
+        'diff': 0,
+        'ping': 0,
+        'iot_data' : 0
+    }
 
     if sensor_en == 0 and "y" in user_iot.lower():
         user_iot = "n"
